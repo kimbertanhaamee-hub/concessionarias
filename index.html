@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Busca, Inclusão e Edição de Concessionárias</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        .container {
+            max-width: 1400px; /* Aumentado para caber a nova coluna */
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #0056b3;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        /* --- Estilos de Layout e Filtros --- */
+        .filter-area {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background-color: #e9f7ff;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .filter-group {
+            display: flex;
+            align-items: center;
+        }
+        .filter-group label {
+            font-weight: bold;
+            margin-right: 10px;
+            color: #0056b3;
+        }
+        .filter-area select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            width: 150px;
+            cursor: pointer;
+        }
+        
+        /* --- Estilos da Área de Inclusão --- */
+        .inclusion-area {
+            border: 2px solid #28a745;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            background-color: #e6ffed;
+        }
+        .inclusion-area h2 {
+            color: #28a745;
+            margin-top: 0;
+            border-bottom: 1px solid #28a745;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 150px;
+            flex: 1;
+        }
+        .form-group label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+        .form-group input, .form-group select {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        #addButton {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: background-color 0.2s;
+        }
+        #addButton:hover {
+            background-color: #1e7e34;
+        }
+        .required-field {
+            border-color: red !important;
+        }
+
+        /* --- Estilos da Tabela e Edição --- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px 12px; /* Reduzido o padding para caber a coluna extra */
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        /* Cores para diferenciar as linhas */
+        .service-energia { background-color: #fff8e1; }
+        .service-saneamento { background-color: #e3f2fd; }
+        
+        tr:hover { background-color: #f1f1f1; }
+        .contact-info {
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        td a {
+            color: #0056b3;
+            text-decoration: none;
+        }
+        td a:hover {
+            text-decoration: underline;
+        }
+
+        /* Estilo dos Inputs na Edição */
+        .editing input, .editing select {
+            width: 100%;
+            padding: 4px;
+            box-sizing: border-box;
+            border: 1px solid #aaa;
+            border-radius: 3px;
+        }
+        /* Estilos dos botões de Ação */
+        .action-button {
+            padding: 5px 8px;
+            margin: 2px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
+            white-space: nowrap; /* Impede que o texto do botão quebre */
+        }
+        .action-button:hover {
+            opacity: 0.8;
+        }
+        .edit-btn { background-color: #ffc107; color: #333; }
+        .save-btn { background-color: #007bff; color: white; }
+        .cancel-btn { background-color: #dc3545; color: white; }
+
+        /* Ajustes de largura de colunas para Edição */
+        .uf-col { width: 40px; }
+        .service-col { width: 100px; }
+        .regiao-col { width: 100px; }
+        .acoes-col { width: 140px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Busca, Inclusão e Edição de Concessionárias (Energia e Saneamento)</h1>
+
+    <div class="inclusion-area">
+        <h2>Incluir Nova Concessionária</h2>
+        <div class="form-row">
+            <div class="form-group" style="flex: 0 0 80px;">
+                <label for="newUf">UF*</label>
+                <input type="text" id="newUf" maxlength="2" placeholder="Ex: RJ" required>
+            </div>
+            <div class="form-group" style="flex: 0 0 150px;">
+                <label for="newService">Serviço*</label>
+                <select id="newService" required>
+                    <option value="Energia">Energia</option>
+                    <option value="Saneamento">Saneamento</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="newConcessionaria">Concessionária*</label>
+                <input type="text" id="newConcessionaria" placeholder="Nome da Concessionária" required>
+            </div>
+            <div class="form-group" style="flex: 0 0 150px;">
+                <label for="newRegiao">Região*</label>
+                <input type="text" id="newRegiao" placeholder="Ex: SUDESTE" required>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group" style="flex: 2;">
+                <label for="newContato">Contato (Telefone/Email)*</label>
+                <input type="text" id="newContato" placeholder="Ex: Telefone: 0800 123 4567 / E-mail: contato@empresa.com" required>
+            </div>
+            <div class="form-group" style="flex: 2;">
+                <label for="newSite">Site (URL)*</label>
+                <input type="url" id="newSite" placeholder="Ex: https://www.empresa.com.br/" required>
+            </div>
+            <div class="form-group" style="flex: 0 0 120px; justify-content: flex-end;">
+                 <button id="addButton" onclick="addConcessionaria()">Adicionar</button>
+            </div>
+        </div>
+    </div>
+    <div class="filter-area">
+        <div class="filter-group">
+            <label for="ufSelect">Filtrar por UF:</label>
+            <select id="ufSelect" onchange="filterTable()">
+                <option value="">Todas as UFs</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="serviceSelect">Filtrar por Serviço:</label>
+            <select id="serviceSelect" onchange="filterTable()">
+                <option value="">Todos os Serviços</option>
+                <option value="Energia">Energia</option>
+                <option value="Saneamento">Saneamento</option>
+            </select>
+        </div>
+    </div>
+    <table id="concessionariasTable">
+        <thead>
+            <tr>
+                <th class="uf-col">UF</th>
+                <th class="service-col">Serviço</th>
+                <th>Concessionária</th>
+                <th class="regiao-col">Região</th>
+                <th>Contato (Telefone/Email)</th>
+                <th>Site</th>
+                <th class="acoes-col">Ações</th> </tr>
+        </thead>
+        <tbody>
+            </tbody>
+    </table>
+</div>
+
+<script>
+    // Colunas: [0:UF, 1:Serviço, 2:Concessionária, 3:Região, 4:Site, 5:Contato]
+    const initialData = [
+        // --- Dados de ENERGIA ---
+        ["MA", "Energia", "CONCESSIONÁRIA", "NORDESTE", "https://ma.equatorialenergia.com.br/", "Telefone: 0800 086 0116 (Central Equatorial)"],
+        ["PI", "Energia", "EQUATORIAL PI", "NORDESTE", "http://www.equatorialenergia.com.br/", "Telefone: 0800 086 0800"],
+        ["CE", "Energia", "ENEL CE", "NORDESTE", "https://www.enel.com.br/pt.html", "Telefone: 0800 285 0196 / E-mail: canalgd.ce@br.enel.com"],
+        ["RN", "Energia", "NEOENERGIA COSERN", "NORDESTE", "http://www.cosern.com.br/", "Telefone: 116 (Atendimento)"],
+        ["PB", "Energia", "ENERGISA PB", "NORDESTE", "http://www.energisa.com.br/", "Telefone: 0800 083 0196"],
+        ["PE", "Energia", "NEOENERGIA PE", "NORDESTE", "https://www.neoenergia.com/", "Telefone: 116 (Atendimento)"],
+        ["AL", "Energia", "EQUATORIAL AL", "NORDESTE", "http://www.equatorialenergia.com.br/", "Telefone: 0800 082 0196"],
+        ["SE", "Energia", "ENERGISA SE", "NORDESTE", "http://www.energisa.com.br/", "Telefone: 0800 079 0196"],
+        ["SE", "Energia", "SULGIPE", "NORDESTE", "http://www.sulgipipe.com.br/", "Telefone: 0800 079 0196"],
+        ["BA", "Energia", "NEOENERGIA COELBA", "NORDESTE", "http://www.coelba.com.br/", "Telefone: 116 (Atendimento)"],
+        ["SP", "Energia", "CPFL PAULISTA", "SUDESTE", "http://www.cpfl.com.br/", "Telefone: 0800 010 1010"],
+        ["SP", "Energia", "CPFL PIRATININGA", "SUDESTE", "http://www.cpfl.com.br/", "Telefone: 0800 010 2576"],
+        ["SP", "Energia", "CPFL SANTA CRUZ", "SUDESTE", "http://www.cpfl.com.br/", "Telefone: 0800 772 4196"],
+        ["SP", "Energia", "EDP SÃO PAULO", "SUDESTE", "https://brasil.edp.com/pt-br/distribuicao-edp-sao-paulo", "Telefone: 0800 721 0123"],
+        ["SP", "Energia", "ENEL SÃO PAULO", "SUDESTE", "https://www.enel.com.br/pt-saopaulo", "Telefone: 0800 727 2120 / E-mail: canalgd.sp@br.enel.com"],
+        ["SP", "Energia", "ENERGISA SUL-SUDESTE", "SUDESTE", "http://www.energisa.com.br/", "Telefone: 0800 701 0328"],
+        ["SP", "Energia", "NEOENERGIA ELEKTRO", "SUDESTE", "https://abradee.org.br/associadas/#", "Telefone: 0800 701 0102 / WhatsApp: (19) 2122-1696"],
+        ["RJ", "Energia", "ENEL RJ", "SUDESTE", "https://www.enel.com.br/pt.html", "Telefone: 0800 285 0196 / E-mail: canalgd.rj@br.enel.com"],
+        ["RJ", "Energia", "LIGHT", "SUDESTE", "http://www.light.com.br/", "Telefone: 0800 021 0196 (Emergencial) / 0800 282 0120 (Comercial)"],
+        ["ES", "Energia", "EDP ES", "SUDESTE", "https://brasil.edp.com/pt-br/distribuicao-edp-espirito-santo", "Telefone: 0800 721 0707"],
+        ["ES", "Energia", "ELFSM", "SUDESTE", "https://abradee.org.br/associadas/#", "Telefone: (27) 3254-1544"],
+        ["MG", "Energia", "CEMIG D", "SUDESTE", "http://www.cemig.com.br/", "Telefone: 116 (Minas Gerais) / 0800 721 0116 (Demais Estados)"],
+        ["MG", "Energia", "DMED", "SUDESTE", "http://www.dme-pc.com.br/", "Telefone: 0800 035 0196"],
+        ["MG", "Energia", "ENERGISA MINAS-RIO", "SUDESTE", "http://www.energisa.com.br/", "Telefone: 0800 032 0196"],
+        ["RO", "Energia", "ENERGISA RO", "NORTE", "http://www.energisa.com.br/", "Telefone: 0800 647 0120"],
+        ["AC", "Energia", "ENERGISA AC", "NORTE", "http://www.energisa.com.br/", "Telefone: 0800 647 7272"],
+        ["AM", "Energia", "AMAZONAS ENERGIA", "NORTE", "http://website.amazonasenergia.com/", "Telefone: 0800 701 3001"],
+        ["PA", "Energia", "EQUATORIAL PA", "NORTE", "http://www.equatorialenergia.com.br/", "Telefone: 0800 091 0196"],
+        ["TO", "Energia", "ENERGISA TO", "NORTE", "http://www.energisa.com.br/", "Telefone: 0800 721 0127"],
+        ["AP", "Energia", "EQUATORIAL CEA AP", "NORTE", "http://cea.portal.ap.gov.br/", "Telefone: 0800 096 0196"],
+        ["RR", "Energia", "RORAIMA ENERGIA", "NORTE", "http://www.roraimaenergia.com.br/", "Telefone: 0800 701 9051"],
+        ["DF", "Energia", "NEOENERGIA BRASÍLIA", "CENTRO-OESTE", "http://www.ceb.com.br/", "Telefone: 116 (Atendimento)"],
+        ["MT", "Energia", "ENERGISA MT", "CENTRO-OESTE", "http://www.energisa.com.br/", "Telefone: 0800 646 4196"],
+        ["MS", "Energia", "ENERGISA MS", "CENTRO-OESTE", "http://www.energisa.com.br/", "Telefone: 0800 722 7272"],
+        ["MS", "Energia", "NEOENERGIA ELEKTRO", "CENTRO-OESTE", "https://abradee.org.br/associadas/#", "Telefone: 0800 701 0102 / WhatsApp: (19) 2122-1696"],
+        ["GO", "Energia", "EQUATORIAL GO", "CENTRO-OESTE", "https://abradee.org.br/associadas/#", "Telefone: 0800 062 0196"],
+        ["GO", "Energia", "CHESP", "CENTRO-OESTE", "https://abradee.org.br/associadas/#", "Telefone: (64) 3601-9000 (Geral)"],
+        ["PR", "Energia", "COPEL-DIS", "SUL", "http://www.copel.com/", "Telefone: 0800 51 00 116"],
+        ["SC", "Energia", "CELESC-D", "SUL", "http://www.celesc.com.br/", "Telefone: 0800 048 0196 (Emergência) / 0800 048 0120 (Comercial)"],
+        ["RS", "Energia", "CPFL RGE", "SUL", "http://www.rge-rs.com.br/", "Telefone: 0800 970 0900"],
+        ["RS", "Energia", "EQUATORIAL CEEE", "SUL", "http://www.ceee.com.br/", "Telefone: 0800 721 2333"],
+        ["RS", "Energia", "DEMEI", "SUL", "https://www.demeei.com.br/", "Telefone: 0800 901 7575 (Emergência)"],
+        ["RS", "Energia", "HIDROPAN", "SUL", "http://www.hidropan.com.br/", "Telefone: 0800 721 6464"],
+
+        // --- Dados de SANEAMENTO (Água/Esgoto) ---
+        ["MA", "Saneamento", "CAEMA", "NORDESTE", "https://www.caema.ma.gov.br/", "Telefone: 0800 701 0195"],
+        ["PI", "Saneamento", "AGESPISA", "NORDESTE", "https://www.agespisa.com.br/", "Telefone: 0800 086 8888"],
+        ["CE", "Saneamento", "CAGECE", "NORDESTE", "https://www.cagece.com.br/", "Telefone: 0800 275 0195"],
+        ["RN", "Saneamento", "CAERN", "NORDESTE", "https://www.caern.com.br/", "Telefone: 115"],
+        ["PB", "Saneamento", "CAGEPA", "NORDESTE", "https://www.cagepa.pb.gov.br/", "Telefone: 115 ou 0800 083 0158"],
+        ["PE", "Saneamento", "COMPESA", "NORDESTE", "https://servicos.compesa.com.br/", "Telefone: 0800 081 0195"],
+        ["AL", "Saneamento", "CASAL", "NORDESTE", "https://www.casal.al.gov.br/", "Telefone: 0800 082 0195"],
+        ["SE", "Saneamento", "DESO", "NORDESTE", "https://www.deso-se.com.br/", "Telefone: 0800 079 0195"],
+        ["BA", "Saneamento", "EMBASA", "NORDESTE", "https://www.embasa.ba.gov.br/", "Telefone: 0800 0555 195"],
+        ["SP", "Saneamento", "SABESP", "SUDESTE", "https://www.sabesp.com.br/", "Telefone: 195 ou 0800 055 0195"],
+        ["RJ", "Saneamento", "ÁGUAS DO RIO / CEDAE", "SUDESTE", "https://aguasdorio.com.br/", "Telefone Águas do Rio: 0800 195 0 195 / Telefone CEDAE (residual): 0800 28 21 195"],
+        ["ES", "Saneamento", "CESAN", "SUDESTE", "https://www.cesan.com.br/", "Telefone: 115 ou 0800 095 2300"],
+        ["MG", "Saneamento", "COPASA", "SUDESTE", "https://copasaportalprd.azurewebsites.net/", "Telefone: 115 ou 0800 0300 115"],
+        ["RO", "Saneamento", "CAERD", "NORTE", "http://www.caerd-ro.com.br/", "Telefone: 0800 647 1950"],
+        ["AC", "Saneamento", "SANACRE", "NORTE", "https://www.sanacre.com.br/", "Telefone: 0800 721 5195"],
+        ["AM", "Saneamento", "ÁGUAS DE MANAUS", "NORTE", "https://www.aguasdemanaus.com.br/", "Telefone: 0800 092 0195"],
+        ["PA", "Saneamento", "COSANPA", "NORTE", "http://www.cosanpa.pa.gov.br/", "Telefone: 0800 707 1950"],
+        ["TO", "Saneamento", "BRK (Saneatins)", "NORTE", "https://www.brkambiental.com.br/", "Telefone: 0800 644 0195"],
+        ["AP", "Saneamento", "CAESA", "NORTE", "https://www.caesa.ap.gov.br/", "Telefone: 0800 096 0195"],
+        ["RR", "Saneamento", "CAER", "NORTE", "https://www.caer.com.br/", "Telefone: 0800 280 9520"],
+        ["DF", "Saneamento", "CAESB", "CENTRO-OESTE", "https://www.caesb.df.gov.br/", "Telefone: 115"],
+        ["MT", "Saneamento", "SANEAMENTO MATO GROSSO", "CENTRO-OESTE", "https://www.aguasdematogrosso.com.br/", "Telefone: 0800 644 6060"],
+        ["MS", "Saneamento", "SANESUL", "CENTRO-OESTE", "https://www.sanesul.ms.gov.br/", "Telefone: 0800 067 6010"],
+        ["GO", "Saneamento", "SANEAGO", "CENTRO-OESTE", "https://www.saneago.com.br/", "Telefone: 0800 645 0115"],
+        ["PR", "Saneamento", "SANEPAR", "SUL", "https://www.sanepar.com.br/", "Telefone: 115 ou 0800 200 0115"],
+        ["SC", "Saneamento", "CASAN", "SUL", "https://www.casan.com.br/", "Telefone: 0800 643 0195"],
+        ["RS", "Saneamento", "CORSAN", "SUL", "https://corsan.com.br/", "Telefone: 0800 646 6444"],
+    ];
+
+    let data = [...initialData];
+
+    const tableBody = document.getElementById('concessionariasTable').getElementsByTagName('tbody')[0];
+    const ufSelect = document.getElementById('ufSelect');
+    const serviceSelect = document.getElementById('serviceSelect');
+
+    // Mapeamento dos índices do array
+    const COLS = {
+        UF: 0,
+        SERVICE: 1,
+        CONCESSIONARIA: 2,
+        REGIAO: 3,
+        SITE: 4,
+        CONTATO: 5
+    };
+
+    // 1. Preenche a tabela com os dados
+    function populateTable(dataToUse) {
+        tableBody.innerHTML = ''; 
+        
+        dataToUse.forEach((row, index) => {
+            const tr = tableBody.insertRow();
+            tr.className = 'service-' + row[COLS.SERVICE].toLowerCase(); 
+            tr.setAttribute('data-index', index); // Adiciona o índice do array para a edição
+            
+            // UF
+            tr.insertCell().textContent = row[COLS.UF];
+            
+            // Serviço
+            tr.insertCell().textContent = row[COLS.SERVICE];
+
+            // Concessionária
+            tr.insertCell().textContent = row[COLS.CONCESSIONARIA];
+
+            // Região
+            tr.insertCell().textContent = row[COLS.REGIAO];
+
+            // Contato
+            const tdContato = tr.insertCell();
+            tdContato.className = 'contact-info';
+            const contactParts = row[COLS.CONTATO].split('/').map(part => part.trim());
+            tdContato.innerHTML = contactParts.map(part => `<span>${part}</span>`).join('<br>');
+            
+            // Site (Link)
+            const tdSite = tr.insertCell();
+            const a = document.createElement('a');
+            a.href = row[COLS.SITE];
+            try {
+                a.textContent = new URL(row[COLS.SITE]).hostname.replace('www.', ''); 
+            } catch (e) {
+                a.textContent = row[COLS.SITE];
+            }
+            a.target = "_blank";
+            tdSite.appendChild(a);
+
+            // Ações (Botão Editar)
+            const tdAcoes = tr.insertCell();
+            tdAcoes.className = 'acoes-col';
+            tdAcoes.innerHTML = `<button class="action-button edit-btn" onclick="editRow(${index})">Editar</button>`;
+        });
+    }
+
+    // 2. Preenche o Dropdown (Select) de UF
+    function populateUfSelect(currentData) {
+        const uniqueUFs = new Set();
+        currentData.forEach(row => uniqueUFs.add(row[COLS.UF]));
+        
+        const currentSelection = ufSelect.value;
+        ufSelect.innerHTML = '<option value="">Todas as UFs</option>';
+
+        const sortedUFs = Array.from(uniqueUFs).sort(); 
+        sortedUFs.forEach(uf => {
+            const option = document.createElement('option');
+            option.value = uf;
+            option.textContent = uf;
+            ufSelect.appendChild(option);
+        });
+
+        if (currentSelection && sortedUFs.includes(currentSelection)) {
+            ufSelect.value = currentSelection;
+        }
+    }
+
+    // 3. Função de Filtragem Múltipla
+    function filterTable() {
+        const selectedUF = ufSelect.value;
+        const selectedService = serviceSelect.value;
+        let filteredData = data;
+
+        if (selectedUF) {
+            filteredData = filteredData.filter(row => row[COLS.UF] === selectedUF);
+        }
+
+        if (selectedService) {
+            filteredData = filteredData.filter(row => row[COLS.SERVICE] === selectedService);
+        }
+
+        populateTable(filteredData);
+    }
+
+    // 4. Função: Adiciona a nova concessionária
+    function addConcessionaria() {
+        const newUf = document.getElementById('newUf');
+        const newService = document.getElementById('newService');
+        const newConcessionaria = document.getElementById('newConcessionaria');
+        const newRegiao = document.getElementById('newRegiao');
+        const newSite = document.getElementById('newSite');
+        const newContato = document.getElementById('newContato');
+
+        const inputs = [newUf, newConcessionaria, newRegiao, newSite, newContato];
+        let allValid = true;
+
+        inputs.forEach(input => {
+            if (!input.value.trim()) {
+                input.classList.add('required-field');
+                allValid = false;
+            } else {
+                input.classList.remove('required-field');
+            }
+        });
+
+        if (!allValid) {
+            alert('Por favor, preencha todos os campos obrigatórios (*).');
+            return;
+        }
+
+        const newEntry = [
+            newUf.value.toUpperCase().trim(),
+            newService.value,
+            newConcessionaria.value.toUpperCase().trim(),
+            newRegiao.value.toUpperCase().trim(),
+            newSite.value.trim(),
+            newContato.value.trim()
+        ];
+
+        data.push(newEntry);
+
+        newUf.value = '';
+        newConcessionaria.value = '';
+        newRegiao.value = '';
+        newSite.value = '';
+        newContato.value = '';
+        
+        populateUfSelect(data);
+        filterTable();
+
+        alert('Nova concessionária adicionada com sucesso!');
+    }
+
+    // 5. NOVA FUNÇÃO: Entra no modo de edição
+    function editRow(index) {
+        // Encontra a linha na tabela pelo data-index
+        const row = document.querySelector(`tr[data-index="${index}"]`);
+        if (!row) return;
+
+        // Armazena os dados atuais para o caso de Cancelar
+        row.setAttribute('data-original-data', JSON.stringify(data[index]));
+        row.classList.add('editing');
+
+        // Mapeia as células da linha
+        const cells = row.cells;
+        const originalData = data[index];
+
+        // 0: UF
+        cells[COLS.UF].innerHTML = `<input type="text" value="${originalData[COLS.UF]}" maxlength="2" data-col="UF">`;
+
+        // 1: Serviço (Dropdown)
+        cells[COLS.SERVICE].innerHTML = `
+            <select data-col="Service">
+                <option value="Energia" ${originalData[COLS.SERVICE] === 'Energia' ? 'selected' : ''}>Energia</option>
+                <option value="Saneamento" ${originalData[COLS.SERVICE] === 'Saneamento' ? 'selected' : ''}>Saneamento</option>
+            </select>`;
+
+        // 2: Concessionária
+        cells[COLS.CONCESSIONARIA].innerHTML = `<input type="text" value="${originalData[COLS.CONCESSIONARIA]}" data-col="Concessionaria">`;
+        
+        // 3: Região
+        cells[COLS.REGIAO].innerHTML = `<input type="text" value="${originalData[COLS.REGIAO]}" data-col="Regiao">`;
+
+        // 4: Contato
+        cells[COLS.CONTATO].innerHTML = `<input type="text" value="${originalData[COLS.CONTATO]}" data-col="Contato">`;
+
+        // 5: Site
+        cells[COLS.SITE].innerHTML = `<input type="url" value="${originalData[COLS.SITE]}" data-col="Site">`;
+
+        // 6: Ações (Muda para Salvar e Cancelar)
+        cells[6].innerHTML = `
+            <button class="action-button save-btn" onclick="saveRow(${index})">Salvar</button>
+            <button class="action-button cancel-btn" onclick="cancelEdit(${index})">Cancelar</button>
+        `;
+    }
+
+    // 6. NOVA FUNÇÃO: Salva as alterações
+    function saveRow(index) {
+        const row = document.querySelector(`tr[data-index="${index}"]`);
+        if (!row) return;
+
+        const cells = row.cells;
+        
+        // Coleta os novos dados dos inputs
+        const newUf = cells[COLS.UF].querySelector('input').value.toUpperCase().trim();
+        const newService = cells[COLS.SERVICE].querySelector('select').value;
+        const newConcessionaria = cells[COLS.CONCESSIONARIA].querySelector('input').value.toUpperCase().trim();
+        const newRegiao = cells[COLS.REGIAO].querySelector('input').value.toUpperCase().trim();
+        const newContato = cells[COLS.CONTATO].querySelector('input').value.trim();
+        const newSite = cells[COLS.SITE].querySelector('input').value.trim();
+
+        if (!newUf || !newConcessionaria || !newRegiao || !newContato || !newSite) {
+            alert("Todos os campos devem ser preenchidos.");
+            return;
+        }
+
+        // Atualiza o array de dados global
+        data[index] = [
+            newUf,
+            newService,
+            newConcessionaria,
+            newRegiao,
+            newSite,
+            newContato
+        ];
+
+        // Sai do modo de edição e recarrega a tabela (mantendo os filtros)
+        row.classList.remove('editing');
+        populateUfSelect(data); 
+        filterTable();
+
+        alert(`Concessionária ${newConcessionaria} atualizada com sucesso!`);
+    }
+
+    // 7. NOVA FUNÇÃO: Cancela a edição
+    function cancelEdit(index) {
+        const row = document.querySelector(`tr[data-index="${index}"]`);
+        if (!row) return;
+
+        // Volta ao estado original (apenas recarrega a tabela com os dados globais inalterados)
+        row.classList.remove('editing');
+        filterTable(); 
+    }
+
+    // Expõe as funções para serem usadas no HTML
+    window.addConcessionaria = addConcessionaria;
+    window.editRow = editRow;
+    window.saveRow = saveRow;
+    window.cancelEdit = cancelEdit;
+
+    // Executa as funções iniciais
+    populateUfSelect(data);
+    populateTable(data);
+</script>
+
+</body>
+</html>
