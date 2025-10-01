@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guia de Treinos Personalizáveis</title>
+    <style>
+        /* CSS BÁSICO */
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; color: #333; }
+        .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); }
+        h1 { color: #0056b3; text-align: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+        
+        /* Estilo do Formulário */
+        .form-section { margin-bottom: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 5px; background-color: #f8f8f8; }
+        .form-section label { display: block; margin-top: 10px; font-weight: bold; }
+        .form-section input[type="text"], .form-section input[type="number"], .form-section select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .form-section button { background-color: #007bff; color: white; padding: 10px 15px; margin-top: 15px; border: none; border-radius: 4px; cursor: pointer; width: auto; font-size: 16px; transition: background-color 0.3s; }
+        .form-section button:hover { background-color: #0056b3; }
+        .clean-button { background-color: #f44336 !important; margin-left: 10px; }
+        .clean-button:hover { background-color: #d32f2f !important; }
+
+        /* Estilo da Recomendação */
+        #recommendation-output { margin-top: 25px; padding: 15px; border-radius: 6px; background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724;}
+        #recommendation-output h3 { color: #155724; margin-top: 0; }
+        
+        /* Botões de Seleção */
+        .profile-selection { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; margin-bottom: 20px; }
+        .profile-button { flex-grow: 1; padding: 12px; font-size: 15px; cursor: pointer; border: none; border-radius: 5px; transition: opacity 0.3s; font-weight: bold; background-color: #007bff; color: white; opacity: 0.9; }
+        .profile-button:hover { opacity: 1; background-color: #0056b3; }
+        .profile-button.highlight { background-color: #ffc107; color: #333; opacity: 1; border: 2px solid #e0a800; }
+
+        /* Treino Output */
+        .treino-output { margin-top: 20px; border-top: 3px solid #0056b3; padding-top: 15px; }
+        .treino-output h3 { color: #555; border-bottom: 1px dashed #ccc; padding-bottom: 5px; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Tabela de Edição */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .edit-row input { width: 90%; padding: 5px; border: 1px solid #ccc; }
+        .action-button { background-color: #f44336; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
+        .add-button { background-color: #4CAF50; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; margin-left: 10px; }
+        .save-button { background-color: #007bff; margin-top: 15px; }
+        .export-button { background-color: #337ab7; margin-top: 15px; margin-left: 10px; }
+
+        /* Estilos específicos para a impressão/PDF */
+        @media print {
+            .no-print { display: none !important; }
+            .container { box-shadow: none; border: none; padding: 0; margin: 0; }
+            .edit-row input, .action-button, .add-button { border: none !important; box-shadow: none; background: none; }
+            .action-col { display: none !important; }
+            .edit-row td:last-child { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Guia de Treinos Personalizáveis</h1>
+
+    <div id="cadastro-form" class="form-section no-print">
+        <label for="nome">1. Insira ou confirme seu nome completo (Salvo localmente):</label>
+        <input type="text" id="nome" placeholder="Seu Nome Completo">
+        <button onclick="salvarNome()">Salvar Nome</button>
+        <button class="clean-button" onclick="limparDados()">Limpar Dados Locais</button>
+    </div>
+
+    <div id="profile-area" style="display:none;">
+        <p style="font-size: 1.2em; font-weight: bold;">Olá, <span id="user-name-display" style="color: #0056b3;"></span>!</p>
+        
+        <div id="perfil-form" class="form-section no-print">
+            <h2 style="margin-top: 0; color: #333;">2. Preencha seu Perfil para Recomendação:</h2>
+            <label for="idade">Idade:</label>
+            <input type="number" id="idade" name="idade" min="18" max="99" required>
+
+            <label for="historico">Histórico de Treino antes de parar:</label>
+            <select id="historico" name="historico" required>
+                <option value="" selected disabled>-- Selecione o Histórico --</option>
+                <option value="iniciante">Menos de 1 ano de treino.</option>
+                <option value="intermediario">1 a 3 anos de treino.</option>
+                <option value="avancado">Mais de 3 anos de treino pesado.</option>
+            </select>
+
+            <label for="frequencia">Dias por semana que pretende treinar:</label>
+            <select id="frequencia" name="frequencia" required>
+                <option value="" selected disabled>-- Selecione a Frequência --</option>
+                <option value="3">3 Dias</option>
+                <option value="4">4 Dias</option>
+                <option value="5">5 Dias</option>
+                <option value="6">6 Dias</option>
+            </select>
+
+            <button onclick="recomendarDivisao()">Recomendar Divisão de Treino</button>
+        </div>
+    </div>
+
+    <div id="recommendation-output" class="no-print" style="display: none;">
+        <h3>✨ Recomendação Especial:</h3>
+        <p id="recommendation-text"></p>
+    </div>
+
+    <div class="profile-selection no-print" id="profile-selection-buttons" style="display:none;">
+        <h2 style="width: 100%; margin-top: 10px;">3. Ou selecione sua divisão preferida:</h2>
+        <button id="btn-fullbody" class="profile-button" onclick="loadTreino('fullbody')">Full Body (3x)</button>
+        <button id="btn-upperlower" class="profile-button" onclick="loadTreino('upperlower')">Upper/Lower (4x)</button>
+        <button id="btn-ppl" class="profile-button" onclick="loadTreino('ppl')">PPL (Push/Pull/Legs) (6x)</button>
+        <button id="btn-abc" class="profile-button" onclick="loadTreino('abc')">ABC 1x (3x)</button>
+        <button id="btn-abcd" class="profile-button" onclick="loadTreino('abcd')">ABCD (4x)</button>
+    </div>
+
+    <div class="treino-output" id="treino-display">
+        <p style="text-align: center; margin-top: 15px;">Aguardando o preenchimento ou confirmação do nome no Passo 1.</p>
+    </div>
+</div>
+
+<script>
+    // Variáveis globais
+    let currentTreino = null; 
+    let currentDivisionId = null;
+
+    // --- DATABASE DE TREINOS ---
+    const treinosPadrao = {
+        'fullbody': {
+            titulo: "1. Treino Full Body (3x por Semana)",
+            descricao: "Melhor para o retorno. Alta frequência, foco em movimentos essenciais e técnica.",
+            dias: {
+                'Dia Único (A, B e C)': [
+                    ["Agachamento Livre ou Leg Press", "3x10-12", "Foco na forma"],
+                    ["Supino Halteres", "3x10-12", "Controle de descida"],
+                    ["Remada Curvada", "3x10-12", "Puxar com as costas"],
+                    ["Stiff (Posterior Coxa)", "3x12-15", "Alongamento"],
+                    ["Desenvolvimento Halteres", "3x10-12", "Estabilidade"],
+                    ["Panturrilha", "3x15-20", "Amplitude"],
+                    ["Prancha Abdominal", "3x45 seg", "Core"]
+                ]
+            }
+        },
+        'upperlower': {
+            titulo: "2. Treino Upper/Lower (4x por Semana)",
+            descricao: "Ótima frequência (2x por músculo/semana) e bom descanso. Ideal para hipertrofia no retorno.",
+            dias: {
+                'Dia A: Upper Body (Empurrar/Puxar)': [
+                    ["Supino Inclinado Halteres", "3x10", "Peito superior"],
+                    ["Puxada Alta (Pegada Aberta)", "3x10", "Dorsal"],
+                    ["Desenvolvimento Militar (Sentado)", "3x10", "Ombros"],
+                    ["Face Pull", "3x15", "Manguito/Posterior ombro"],
+                    ["Tríceps Corda + Rosca Direta (Super-Série)", "3x12", "Braços"]
+                ],
+                'Dia B: Lower Body (Pernas)': [
+                    ["Agachamento Livre", "4x8-10", "Padrão de força"],
+                    ["Levantamento Terra Romeno", "3x10-12", "Posterior e Glúteo"],
+                    ["Extensora", "3x12-15", "Quadríceps"],
+                    ["Panturrilha em pé", "4x15", "Panturrilha"]
+                ]
+            }
+        },
+        'ppl': {
+            titulo: "3. Treino PPL (Push/Pull/Legs) (6x por Semana)",
+            descricao: "Alto volume e alta frequência. Para o retorno, inicie com 3-4 séries no total, usando cargas leves. **Atenção:** Use esta divisão apenas se for treinar 5 ou 6 dias.",
+            dias: {
+                'Dia A: Push (Empurrar: Peito, Ombro, Tríceps)': [
+                    ["Supino Reto (Barra ou Halteres)", "4x8-10", "Padrão de força"],
+                    ["Desenvolvimento Halteres", "3x10-12", "Ombro frontal/medial"],
+                    ["Tríceps Pulley (Corda)", "3x12-15", "Tríceps"],
+                    ["Elevação Lateral", "3x12-15", "Ombro isolado"]
+                ],
+                'Dia B: Pull (Puxar: Costas, Bíceps, Trapézio)': [
+                    ["Remada Curvada (Barra/Halteres)", "4x8-10", "Lombar e dorsal"],
+                    ["Puxada Alta", "3x10-12", "Largo da dorsal"],
+                    ["Rosca Direta", "3x10-12", "Bíceps"],
+                    ["Face Pull", "3x15", "Manguito/Posterior ombro"]
+                ],
+                'Dia C: Legs (Pernas e Core)': [
+                    ["Agachamento Livre", "4x8-10", "Geral perna"],
+                    ["Mesa Flexora", "3x12-15", "Posterior"],
+                    ["Extensora", "3x12-15", "Quadríceps"],
+                    ["Panturrilha Sentado", "4x15-20", "Panturrilha"]
+                ]
+            }
+        },
+        'abc': {
+            titulo: "4. Treino ABC 1x (3x por Semana)",
+            descricao: "Opção para quem prefere isolar um pouco mais. Estimula cada grupo 1x por semana. Baixa frequência.",
+            dias: {
+                'Dia A: Peito/Tríceps/Ombro Frontal': [
+                    ["Supino Reto com Halteres", "3 x 10 - 12", "Concentre-se no alongamento."],
+                    ["Desenvolvimento Militar (Halteres)", "3 x 10 - 12", "Maior foco em força."],
+                    ["Tríceps Corda (Pushdown)", "3 x 12 - 15", "Contração máxima."],
+                    ["Abdominal", "3 x Máx. Reps", "-"]
+                ],
+                'Dia B: Costas/Bíceps/Ombro Posterior': [
+                    ["Puxada Alta (Pegada Aberta)", "3 x 10 - 12", "Puxar em direção ao peito."],
+                    ["Remada Baixa (Triângulo/Pegada Fechada)", "3 x 10 - 12", "Foco na retração das escápulas."],
+                    ["Rosca Direta (Barra/Halteres)", "3 x 10 - 12", "Movimento estrito."],
+                    ["Abdominal (Prancha Lateral)", "3 x 45 seg", "-"]
+                ],
+                'Dia C: Pernas/Panturrilhas': [
+                    ["Agachamento Livre (Barra/Leg Press)", "3 x 10 - 12", "Maior volume na perna."],
+                    ["Cadeira Flexora", "3 x 12 - 15", "Isolamento posterior."],
+                    ["Cadeira Extensora", "3 x 12 - 15", "Isolamento anterior."],
+                    ["Panturrilha Sentado", "4 x 15 - 20", "Amplitude total."]
+                ]
+            }
+        },
+        'abcd': {
+            titulo: "5. Treino ABCD (4x por Semana)",
+            descricao: "Bom volume por sessão com recuperação intermediária. Estimula cada músculo 1x por semana. Ideal para focar em grandes volumes.",
+            dias: {
+                'Dia A: Peito/Ombros Frontais': [
+                    ["Supino Reto com Halteres", "4x8-10", "Padrão de força."],
+                    ["Supino Inclinado Máquina", "3x10-12", "Segurança no movimento."],
+                    ["Desenvolvimento Halteres", "3x10-12", "Padrão de força." ]
+                ],
+                'Dia B: Costas/Trapézio/Posterior Ombro': [
+                    ["Puxada Alta (Pegada Aberta)", "4x8-10", "Foco na amplitude."],
+                    ["Remada Curvada (Barra)", "3x10-12", "Maior carga possível com boa forma."],
+                    ["Remada Unilateral (Serrote)", "3x10-12", "Isolar a dorsal."],
+                    ["Face Pull", "3x15-20", "Ombro posterior"]
+                ],
+                'Dia C: Pernas (Ênfase Quadríceps)': [
+                    ["Agachamento Livre/Leg Press", "4x10-12", "Maior volume para a coxa."],
+                    ["Avanço/Passada com Halteres", "3x12 (cada perna)", "Foco em equilíbrio."],
+                    ["Cadeira Extensora", "3x12-15", "Isolamento do quadríceps."],
+                    ["Panturrilha em pé", "4x15-20", "-"]
+                ],
+                'Dia D: Braços/Posterior Coxa/Core': [
+                    ["Rosca Direta + Tríceps Pulley (Super-Série)", "3x10-12", "Pump no braço."],
+                    ["Rosca Martelo + Tríceps Testa (Super-Série)", "3x10-12", "Foco na força."],
+                    ["Stiff com Halteres", "3x10-12", "Foco na posterior de coxa."],
+                    ["Abdominal Roda", "3xMáx. Reps", "Core."]
+                ]
+            }
+        }
+    };
+
+    // --- FUNÇÕES DE LOCALSTORAGE E CADASTRO ---
+
+    function salvarNome() {
+        const nomeInput = document.getElementById('nome').value.trim();
+        const profileArea = document.getElementById('profile-area');
+        const selectionButtons = document.getElementById('profile-selection-buttons');
+
+        if (nomeInput) {
+            localStorage.setItem('userName', nomeInput);
+            
+            // 1. Atualiza a saudação
+            document.getElementById('user-name-display').textContent = nomeInput;
+            
+            // 2. Exibe o restante da aplicação
+            profileArea.style.display = 'block';
+            selectionButtons.style.display = 'flex'; // Mostra os botões de seleção
+            
+            // 3. Limpa o display de treino se estava com mensagem de espera
+            document.getElementById('treino-display').innerHTML = '<p style="text-align: center; margin-top: 15px;">Preencha o perfil ou selecione uma divisão acima.</p>';
+
+        } else {
+            alert('Por favor, insira seu nome.');
+        }
+    }
+
+    // FUNÇÃO QUE GERENCIA A EXIBIÇÃO INICIAL (AJUSTADA)
+    function exibirSaudacao() {
+        const nomeSalvo = localStorage.getItem('userName');
+        const nomeInput = document.getElementById('nome');
+        const profileArea = document.getElementById('profile-area');
+        const selectionButtons = document.getElementById('profile-selection-buttons');
+
+        // Passo 1 (Cadastro de Nome) SEMPRE VISÍVEL
+        
+        if (nomeSalvo) {
+            // Se o nome está salvo, pré-preenche e MOSTRA o restante do app
+            nomeInput.value = nomeSalvo;
+            document.getElementById('user-name-display').textContent = nomeSalvo;
+            profileArea.style.display = 'block';
+            selectionButtons.style.display = 'flex';
+            document.getElementById('treino-display').innerHTML = '<p style="text-align: center; margin-top: 15px;">Preencha o perfil ou selecione uma divisão acima.</p>';
+            
+        } else {
+            // Se o nome NÃO está salvo, APENAS o Passo 1 fica visível
+            profileArea.style.display = 'none';
+            selectionButtons.style.display = 'none';
+            document.getElementById('treino-display').innerHTML = '<p style="text-align: center; margin-top: 15px;">Aguardando o preenchimento ou confirmação do nome no Passo 1.</p>';
+        }
+    }
+
+    function limparDados() {
+        if (confirm('Tem certeza que deseja limpar seu nome e todos os treinos personalizados salvos neste navegador?')) {
+            localStorage.clear(); // Limpa TUDO
+            alert('Dados locais limpos com sucesso. Você será redirecionado para o Passo 1.');
+            location.reload(); 
+        }
+    }
+    
+    function getSavedTreino(id) {
+        const saved = localStorage.getItem(`treino_${id}`);
+        return saved ? JSON.parse(saved) : null;
+    }
+
+    function saveTreino(id, treinoData) {
+        localStorage.setItem(`treino_${id}`, JSON.stringify(treinoData));
+        alert(`Treino ${id.toUpperCase()} salvo localmente com sucesso!`);
+    }
+
+    // --- FUNÇÃO DE EXPORTAÇÃO (PDF) ---
+    function exportarTreino() {
+        if (!currentTreino) {
+            alert("Selecione ou personalize um treino antes de exportar!");
+            return;
+        }
+
+        // 1. Adiciona o nome do usuário ao título da página para o PDF
+        const userName = localStorage.getItem('userName') || 'Usuário';
+        const originalTitle = document.title;
+        document.title = `Treino Personalizado de ${userName} - ${currentTreino.titulo}`;
+
+        // 2. Transforma inputs em texto estático e oculta botões
+        document.querySelectorAll('.no-print').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.action-button').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.add-button').forEach(el => el.style.display = 'none');
+
+        // Substitui os inputs por seu valor de texto para parecer uma tabela estática
+        document.querySelectorAll('.edit-row input').forEach(input => {
+            const text = input.value;
+            const textNode = document.createTextNode(text);
+            input.parentNode.replaceChild(textNode, input);
+        });
+
+        // 3. Chama a função nativa de impressão/PDF do navegador
+        window.print();
+
+        // 4. Restaura a página após a impressão ser fechada (com um pequeno timeout)
+        setTimeout(() => {
+            document.title = originalTitle;
+            location.reload(); 
+        }, 100);
+    }
+    
+    // --- FUNÇÕES DE RECOMENDAÇÃO, EXIBIÇÃO E EDIÇÃO ---
+
+    function recomendarDivisao() {
+        const idade = document.getElementById('idade').value;
+        const historico = document.getElementById('historico').value;
+        const frequencia = document.getElementById('frequencia').value;
+
+        if (!idade || !historico || !frequencia) {
+            alert("Por favor, preencha todos os campos do perfil antes de recomendar.");
+            return;
+        }
+
+        const output = document.getElementById('recommendation-output');
+        const textOutput = document.getElementById('recommendation-text');
+        const buttons = document.querySelectorAll('.profile-button');
+
+        let perfilRecomendadoID = '';
+        let recomendacaoTexto = '';
+        const freq = parseInt(frequencia);
+
+        // Lógica de Recomendação (Mantida)
+        if (freq === 3) {
+            perfilRecomendadoID = 'fullbody';
+            recomendacaoTexto = "Com 3 dias de treino, o **FULL BODY** é de longe a melhor opção para o retorno, pois permite estimular cada músculo 3 vezes por semana, acelerando a reativação da memória muscular com segurança.";
+        } 
+        else if (freq === 4) {
+            if (historico === 'avancado' && parseInt(idade) < 45) {
+                perfilRecomendadoID = 'upperlower'; 
+                recomendacaoTexto = "Com seu histórico avançado, o **UPPER/LOWER (4x)** é o recomendado. Ele garante 2 estímulos semanais por músculo, ideal para hipertrofia no retorno com bom descanso.";
+            } else {
+                perfilRecomendadoID = 'abcd'; 
+                recomendacaoTexto = "O treino **ABCD** é uma boa escolha, permitindo maior volume por sessão. A frequência é 1x/semana por grupo, então o foco será na carga e volume em cada treino.";
+            }
+        } 
+        else if (freq >= 5) {
+             perfilRecomendadoID = 'ppl';
+             recomendacaoTexto = "Para 5 ou 6 dias, a divisão **PPL (Push/Pull/Legs)** é a mais eficiente. **ATENÇÃO:** Comece com cargas BEM leves e volume moderado, pois essa divisão é intensa e exige boa recuperação no retorno.";
+        }
+
+        textOutput.innerHTML = recomendacaoTexto;
+        output.style.display = 'block';
+
+        buttons.forEach(button => {
+            button.classList.remove('highlight');
+            if (button.id === `btn-${perfilRecomendadoID}`) {
+                button.classList.add('highlight');
+            }
+        });
+
+        loadTreino(perfilRecomendadoID);
+    }
+
+    function loadTreino(id) {
+        currentDivisionId = id;
+        currentTreino = getSavedTreino(id) || JSON.parse(JSON.stringify(treinosPadrao[id]));
+        displayTreino();
+        
+        document.querySelectorAll('.profile-button').forEach(btn => btn.classList.remove('highlight'));
+        document.getElementById(`btn-${id}`).classList.add('highlight');
+        
+        document.getElementById('recommendation-output').style.display = 'none';
+    }
+
+    function displayTreino() {
+        const data = currentTreino;
+        const display = document.getElementById('treino-display');
+        
+        let html = `
+            <h2>${data.titulo}</h2>
+            <p style="font-style: italic;"><strong>Descrição:</strong> ${data.descricao}</p>
+        `;
+
+        for (const dia in data.dias) {
+            html += `<div class="treino-section">
+                        <h3>
+                            ${dia}
+                            <div class="no-print">
+                                <button class="add-button" onclick="addRow('${dia}')">Adicionar Exercício</button>
+                            </div>
+                        </h3>
+            `;
+            html += `<table id="table-${dia}">
+                        <thead>
+                            <tr>
+                                <th style="width: 35%;">Exercício (Aparelho)</th>
+                                <th style="width: 25%;">Séries x Repetições</th>
+                                <th style="width: 30%;">Observações</th>
+                                <th style="width: 10%;" class="action-col no-print">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+            data.dias[dia].forEach((ex, index) => {
+                html += renderRow(dia, index, ex);
+            });
+
+            html += `</tbody></table></div>`;
+        }
+        
+        // Botões de Ação e Exportação
+        html += `<div class="no-print">
+                    <button class="save-button" onclick="salvarPersonalizacao()">Salvar Treino Personalizado</button>
+                    <button class="export-button" onclick="exportarTreino()">Exportar (Imprimir/PDF)</button>
+                 </div>`;
+        display.innerHTML = html;
+    }
+
+    function renderRow(dia, index, ex) {
+        return `
+            <tr class="edit-row" data-dia="${dia}" data-index="${index}">
+                <td><input type="text" value="${ex[0]}" oninput="updateTreinoData('${dia}', ${index}, 0, this.value)"></td>
+                <td><input type="text" value="${ex[1]}" oninput="updateTreinoData('${dia}', ${index}, 1, this.value)"></td>
+                <td><input type="text" value="${ex[2]}" oninput="updateTreinoData('${dia}', ${index}, 2, this.value)"></td>
+                <td class="action-col no-print"><button class="action-button" onclick="removeRow('${dia}', ${index})">Remover</button></td>
+            </tr>
+        `;
+    }
+
+    function addRow(dia) {
+        currentTreino.dias[dia].push(["Novo Exercício", "3x10", "Aparelho/Foco"]);
+        displayTreino();
+    }
+
+    function removeRow(dia, index) {
+        currentTreino.dias[dia].splice(index, 1);
+        displayTreino();
+    }
+
+    function updateTreinoData(dia, index, pos, value) {
+        currentTreino.dias[dia][index][pos] = value;
+    }
+
+    function salvarPersonalizacao() {
+        if (currentTreino && currentDivisionId) {
+            saveTreino(currentDivisionId, currentTreino);
+        } else {
+            alert('Nenhum treino selecionado para salvar.');
+        }
+    }
+
+    // --- INICIALIZAÇÃO ---
+    window.onload = exibirSaudacao;
+</script>
+
+</body>
+</html>
